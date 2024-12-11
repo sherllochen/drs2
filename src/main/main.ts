@@ -1,4 +1,6 @@
 /* eslint global-require: off, no-console: off, promise/always-return: off */
+// @ts-ignore
+// @ts-ignore
 
 /**
  * This module executes inside of electron's main process. You can start
@@ -12,8 +14,9 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import express from 'express';
 import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
+import { getFileList, readFile, resolveHtmlPath } from './util';
 
 class AppUpdater {
   constructor() {
@@ -59,12 +62,35 @@ const installExtensions = async () => {
 
 const parseArgv = () => {
   console.log('process.argv', process.argv);
-  const inputArg = process.argv.find((arg) => arg.startsWith(`--${localFolderPathArgvName}=`));
+  const inputArg = process.argv.find((arg) =>
+    arg.startsWith(`--${localFolderPathArgvName}=`),
+  );
 
   return inputArg ? inputArg.split('=')[1] : null;
 };
 
-const createWindow = async (argv: string | null) => {
+const handleGetFiles = () => {
+  return getFileList('/Users/neversion/Downloads/test-folder');
+};
+
+const handleReadFile = (_: any, filePath: string) => {
+  return readFile(filePath);
+};
+
+// Create an Express server
+const startServer = (folderPath: string) => {
+  const audioServer = express();
+  const PORT = 3000;
+  // Serve audio files as static resources
+  audioServer.use('/static', express.static(folderPath));
+
+  // Start server
+  audioServer.listen(PORT, () => {
+    console.log(`Audio server started at http://localhost:${PORT}`);
+  });
+};
+
+const createWindow = async (argv: string | null = null) => {
   console.log('argv', argv);
   if (isDebug) {
     await installExtensions();
@@ -136,7 +162,11 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    createWindow(parseArgv());
+    ipcMain.handle('fileOperator:getFiles', handleGetFiles);
+    ipcMain.handle('fileOperator:readFile', handleReadFile);
+    const folderPath = parseArgv();
+    folderPath && startServer(folderPath);
+    createWindow(folderPath);
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.

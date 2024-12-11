@@ -6,6 +6,16 @@ export type Channels = 'ipc-example';
 
 const electronHandler = {
   ipcRenderer: {
+    getFileList: () => ipcRenderer.invoke('fileOperator:getFiles'),
+    readFile: async (filePath: string) => {
+      const content = await ipcRenderer.invoke(
+        'fileOperator:readFile',
+        filePath,
+      );
+      console.log('content return', content);
+
+      return content;
+    },
     sendMessage(channel: Channels, ...args: unknown[]) {
       ipcRenderer.send(channel, ...args);
     },
