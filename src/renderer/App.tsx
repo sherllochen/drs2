@@ -1,5 +1,6 @@
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { Audio, formatTime } from '@sina_byn/re-audio';
 import icon from '../../assets/icon.svg';
 import './App.css';
 
@@ -14,6 +15,15 @@ function Hello() {
 
     func();
   }, []);
+
+  useEffect(() => {
+    if (files.length === 0) return;
+
+    const sound = new Howl({
+      src: files,
+    });
+    sound.play();
+  }, [files]);
 
   const fetchFileContent = async (filePath: string) => {
     try {
@@ -56,24 +66,31 @@ function Hello() {
             Donate
           </button>
         </a>
-        <button
-          type="button"
-        >
+        <button type="button">
           <span role="img" aria-label="folded hands">
             🙏
           </span>
           Play
         </button>
       </div>
-      {files.length > 0 && (
-        <div>
-          {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <audio controls>
-            <source src={files[0]} type="audio/mpeg" />
-            Your browser does not support the audio element.
-          </audio>
-        </div>
-      )}
+
+      <Audio
+        playlist={[
+          { id: 1, src: '/audio/1.mp3', name: 'for-her-chill' },
+          {
+            id: 2,
+            src: '/audio/2.mp3',
+            name: 'trap-type-beat-rap-instrumental-riff',
+          },
+          { id: 3, src: '/audio/3.mp3', name: 'whip-afro-dancehall' },
+        ]}
+      >
+        {(audioContext) => (
+          <button type="button">
+            {audioContext.playing ? 'pause' : 'play'}
+          </button>
+        )}
+      </Audio>
     </div>
   );
 }

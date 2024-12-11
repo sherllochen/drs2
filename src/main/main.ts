@@ -15,6 +15,7 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import express from 'express';
+import cors from 'cors';
 import MenuBuilder from './menu';
 import { getFileList, readFile, resolveHtmlPath } from './util';
 
@@ -81,6 +82,7 @@ const handleReadFile = (_: any, filePath: string) => {
 const startServer = (folderPath: string) => {
   const audioServer = express();
   const PORT = 3000;
+  audioServer.use(cors());
   // Serve audio files as static resources
   audioServer.use('/static', express.static(folderPath));
 
